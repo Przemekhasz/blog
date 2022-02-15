@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Serializer;
 
@@ -37,19 +38,19 @@ class BlogController extends AbstractController
     }
 
     /**
-     * @Route("/post/{id}", name="_by_id", requirements={"id"="\d+"})
+     * @Route("/post/{id}", name="_by_id", requirements={"id"="\d+"}, methods={"GET"})
      * @ParamConverter("post", class="App:BlogPost")
      */
-    public function post($id): JsonResponse
+    public function post(BlogPost $id): JsonResponse
     {
         return $this->json($id);
     }
 
     /**
      * @Route("/post/{slug}", name="_by_slug")
-     * @ParamConverter("post", class="App:BlogPost", options={"mapping": {"slug": "slug"}})
+     * @ParamConverter("post", class="App:BlogPost", options={"mapping": {"slug": "slug"}}, methods={"GET"})
      */
-    public function postBySlug($slug): JsonResponse
+    public function postBySlug(BlogPost $slug): JsonResponse
     {
         return $this->json($slug);
     }
@@ -74,5 +75,17 @@ class BlogController extends AbstractController
         $em->flush();
 
         return $this->json($blogPost);
+    }
+
+    /**
+     * @Route("/post/{id}", name="_delete", methods={"DELETE"})
+     */
+    public function delete(BlogPost $post, ManagerRegistry $doctrine): JsonResponse
+    {
+        $em = $doctrine->getManager();
+        $em->remove($post);
+        $em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }
