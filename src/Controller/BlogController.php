@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\BlogPost;
 use Doctrine\Persistence\ManagerRegistry;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,71 +16,58 @@ use Symfony\Component\Serializer\Serializer;
  */
 class BlogController extends AbstractController
 {
-    private const POSTS = [
-      [
-          'id' => 1,
-          'slug' => 'hello-world',
-          'title' => 'hello world'
-      ],
-      [
-          'id' => 2,
-          'slug' => 'another-post',
-          'title' => 'this is another post!'
-      ],
-      [
-          'id' => 3,
-          'slug' => 'last-example',
-          'title' => 'this is the last example!'
-      ]
-    ];
-
     /**
      * @Route("/{page}", name="list", defaults={"page": 6}, requirements={"page"="\d+"})
      */
-    public function list($page, Request $request): JsonResponse
+    public function list($page, Request $request, ManagerRegistry $doctrine): JsonResponse
     {
         $limit = $request->get('limit', 10);
+        $repository = $doctrine->getRepository(BlogPost::class);
+        $items = $repository->findAll();
 
         return $this->json(
             [
                 'page' => $page,
                 'limit' => $limit,
-                'data' => array_map(function ($item) {
-                    return $this->generateUrl('blog_by_slug', ['slug' => $item['slug']]);
-                }, self::POSTS)
+                'data' => array_map(function (BlogPost $item) {
+                    return $this->generateUrl('blog_by_slug', ['slug' => $item->getSlug()]);
+                }, $items)
             ]
         );
     }
 
     /**
-     * @Route("/{id}", name="_by_id", requirements={"id"="\d+"})
+     * @Route("/post/{id}", name="_by_id", requirements={"id"="\d+"})
+     * @ParamConverter("post", class="App:BlogPost")
      */
-    public function post(int $id): JsonResponse
+    public function post($id): JsonResponse
     {
-        return $this->json(
-            self::POSTS[array_search($id, array_column(self::POSTS, 'id'))]
-        );
+        return $this->json($id);
     }
 
     /**
-     * @Route("/{slug}", name="_by_slug")
+     * @Route("/post/{slug}", name="_by_slug")
+     * @ParamConverter("post", class="App:BlogPost", options={"mapping": {"slug": "slug"}})
      */
     public function postBySlug($slug): JsonResponse
     {
-        return $this->json(
-            self::POSTS[array_search($slug, array_column(self::POSTS, 'slug'))]
-        );
+        return $this->json($slug);
     }
 
     /**
      * @Route("/add", name="_add", methods={"POST"})
      */
-    public function add(Request $request, ManagerRegistry $doctrine): JsonResponse
+    public function add(Request $request, ManagerRegistry $doctrine, $format = 'json'): JsonResponse
     {
-        /** @var Serializer $serializer */
-        $serializer = $this->getParameter('serializer');
+        $serializer = \JMS\Serializer\SerializerBuilder::create()
+            ->setPropertyNamingStrategy(
+                new \JMS\Serializer\Naming\SerializedNameAnnotationStrategy(
+                    new \JMS\Serializer\Naming\IdenticalPropertyNamingStrategy()
+                )
+            )
+            ->build();
 
-        $blogPost = $serializer->deserialize($request->getContent(), BlogPost::class, 'json');
+        $blogPost = $serializer->deserialize($request->getContent(), BlogPost::class, $format);
 
         $em = $doctrine->getManager();
         $em->persist($blogPost);
