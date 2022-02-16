@@ -17,7 +17,7 @@ class BlogPost
 
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $title;
-
+    // @todo fix read this property
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $published;
 
