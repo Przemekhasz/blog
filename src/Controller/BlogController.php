@@ -38,7 +38,7 @@ class BlogController extends AbstractController
     }
 
     /**
-     * @Route("/post/{id}", name="_by_id", requirements={"id"="\d+"}, methods={"GET"})
+     * @Route("/post/{id}", name="_by_id", requirements={"id"="\d+"})
      * @ParamConverter("post", class="App:BlogPost")
      */
     public function post(BlogPost $id): JsonResponse
@@ -48,7 +48,7 @@ class BlogController extends AbstractController
 
     /**
      * @Route("/post/{slug}", name="_by_slug")
-     * @ParamConverter("post", class="App:BlogPost", options={"mapping": {"slug": "slug"}}, methods={"GET"})
+     * @ParamConverter("post", class="App:BlogPost", options={"mapping": {"slug": "slug"}})
      */
     public function postBySlug(BlogPost $slug): JsonResponse
     {
@@ -56,7 +56,7 @@ class BlogController extends AbstractController
     }
 
     /**
-     * @Route("/add", name="_add", methods={"POST"})
+     * @Route("/add", name="_add")
      */
     public function add(Request $request, ManagerRegistry $doctrine, $format = 'json'): JsonResponse
     {
@@ -78,7 +78,7 @@ class BlogController extends AbstractController
     }
 
     /**
-     * @Route("/post/{id}", name="_delete", methods={"DELETE"})
+     * @Route("/post/{id}", name="_delete")
      */
     public function delete(BlogPost $post, ManagerRegistry $doctrine): JsonResponse
     {
