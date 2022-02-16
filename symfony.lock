@@ -361,6 +361,10 @@
         },
         "files": [
             "./config/packages/test/validator.yaml",
+            "version": "5.3",
+            "ref": "c32cfd98f714894c4f128bb99aa2530c1227603c"
+        },
+        "files": [
             "./config/packages/validator.yaml"
         ]
     },
